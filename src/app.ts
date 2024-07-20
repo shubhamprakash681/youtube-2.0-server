@@ -1,6 +1,8 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import ErrorHandler from "./utils/ErrorHandler";
+import { StatusCodes } from "http-status-codes";
 
 const app = express();
 
@@ -20,5 +22,26 @@ app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 
 // for serving static files
 app.use(express.static("public"));
+
+// routes import
+import { healthcheckRouter, userRouter } from "./routes";
+import { errorMiddleware } from "./middlewares/error";
+
+// routes use
+app.use("/api/v1/", healthcheckRouter);
+app.use("/api/v1/user", userRouter);
+
+// handling unknown routes
+app.all("*", (req, res, next) => {
+  next(
+    new ErrorHandler(
+      `Route ${req.originalUrl} was not found`,
+      StatusCodes.NOT_FOUND
+    )
+  );
+});
+
+// error middleware - For handling all instances of next(new ErrorHandler())
+app.use(errorMiddleware);
 
 export default app;
