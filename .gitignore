@@ -1,3 +1,6 @@
+# Project files
+public/temp/my-uploads/*
+
 # Logs
 logs
 *.log
