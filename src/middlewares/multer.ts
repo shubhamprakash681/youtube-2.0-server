@@ -10,4 +10,4 @@ const storage = multer.diskStorage({
   },
 });
 
-export const uploadFileInServer = multer({ storage: storage });
+export const uploadFileInServer = multer({ storage });

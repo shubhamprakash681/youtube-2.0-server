@@ -3,16 +3,13 @@ import asyncHandler from "../utils/asyncHandler";
 import { StatusCodes } from "http-status-codes";
 import { registerUserSchemaValidator } from "../schema/registerUserSchema";
 import ErrorHandler from "../utils/ErrorHandler";
+import UserModel from "../models/userModel";
 
 interface IRegisterUserBody {
   username: string;
   email: string;
   fullname: string;
   password: string;
-  // avatar?: {
-  //   public_id: string;
-  //   url: string;
-  // };
 }
 
 export const registerUser = asyncHandler(
@@ -22,32 +19,56 @@ export const registerUser = asyncHandler(
       req.body as IRegisterUserBody;
 
     // validations
+    if (
+      [username, email, fullname, password].some(
+        (fields) => fields.trim() === ""
+      )
+    ) {
+      return next(
+        new ErrorHandler("All fields are required!", StatusCodes.BAD_REQUEST)
+      );
+    }
     const validationRes = registerUserSchemaValidator.safeParse({
       username,
       email,
       fullname,
       password,
     });
-    console.log("validationRes: ", validationRes);
+    // console.log("validationRes: ", validationRes);
     if (!validationRes.success) {
-      const validationErrors = validationRes.error.errors.map((err) => err);
+      const validationErrors = validationRes.error.errors.map(
+        (err) => err.message
+      );
 
-      console.log("validationErrors: ", validationErrors);
-
-      // const errrHndlr = new ErrorHandler(
-      //   validationErrors.length
-      //     ? validationErrors.join(", ")
-      //     : "Invalid query parameter",
-      //   StatusCodes.BAD_REQUEST
-      // );
-
-      // console.log("errrHndlr: ", errrHndlr);
-
-      return next(validationErrors);
+      return next(
+        new ErrorHandler(
+          validationErrors.length
+            ? validationErrors.join(", ")
+            : "Invalid query parameter",
+          StatusCodes.BAD_REQUEST
+        )
+      );
     }
 
     // check if user already exists
+    const userAlreadyExists = await UserModel.findOne({
+      $or: [{ username }, { email }],
+    });
+    if (userAlreadyExists) {
+      return next(
+        new ErrorHandler(
+          "User with same username or email already exists",
+          StatusCodes.CONFLICT
+        )
+      );
+    }
+
     // check for images, check for avatar
+    const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+    const myFirstAvatarFile = files["avatar"];
+    console.log("files: ", files);
+    console.log("myFirstAvatarFile: ", myFirstAvatarFile);
+
     // upload images, avatar to cloudinary
     // check for avatar uploaded successfully
 
@@ -58,6 +79,7 @@ export const registerUser = asyncHandler(
 
     res.status(StatusCodes.CREATED).json({
       success: true,
+      files,
     });
   }
 );
