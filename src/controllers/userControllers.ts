@@ -21,7 +21,7 @@ export const registerUser = asyncHandler(
     // validations
     if (
       [username, email, fullname, password].some(
-        (fields) => fields.trim() === ""
+        (fields) => fields?.trim() === ""
       )
     ) {
       return next(
@@ -65,8 +65,8 @@ export const registerUser = asyncHandler(
 
     // check for images, check for avatar
     const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-    const myFirstAvatarFile = files["avatar"];
-    console.log("files: ", files);
+    const myFirstAvatarFile = files["avatar"]?.at(0);
+    // console.log("files: ", files);
     console.log("myFirstAvatarFile: ", myFirstAvatarFile);
 
     // upload images, avatar to cloudinary
