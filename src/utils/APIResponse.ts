@@ -1,5 +1,3 @@
-import statusCodes from "http-status-codes";
-
 class APIResponse {
   public statusCode: number;
   public data: any;
