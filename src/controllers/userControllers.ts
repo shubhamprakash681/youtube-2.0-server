@@ -9,6 +9,7 @@ import ErrorHandler from "../utils/ErrorHandler";
 import UserModel, { IUser } from "../models/userModel";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import APIResponse from "../utils/APIResponse";
+import jwt from "jsonwebtoken";
 
 interface IRegisterUserBody {
   username: string;
@@ -217,7 +218,7 @@ export const loginUser = asyncHandler(
     const { accessToken, refreshToken } =
       await generateAccessAndRefreshTokenToken(user);
 
-    // removing password field
+    // removing password & refreshToken fields
     user.password = "";
     user.refreshToken = "";
 
@@ -228,6 +229,66 @@ export const loginUser = asyncHandler(
       .json(
         new APIResponse(StatusCodes.OK, `Welcome back ${user.fullname}!`, {
           user,
+          accessToken,
+          refreshToken,
+        })
+      );
+  }
+);
+
+export const refreshSession = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const incomingRefreshToken =
+      req.cookies.refreshToken || req.body.refreshToken;
+
+    if (!incomingRefreshToken) {
+      return next(
+        new ErrorHandler("Unauthorized request", StatusCodes.UNAUTHORIZED)
+      );
+    }
+
+    const decodedUser = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET as string
+    ) as unknown as { _id: string };
+
+    const user = await UserModel.findById(decodedUser._id);
+
+    if (!user) {
+      return next(
+        new ErrorHandler(
+          "Refresh token is expired or used",
+          StatusCodes.UNAUTHORIZED
+        )
+      );
+    }
+
+    // verifying refresh token again from DB for extra security
+    if (incomingRefreshToken !== user.refreshToken) {
+      return next(
+        new ErrorHandler(
+          "Refresh token is expired or used",
+          StatusCodes.UNAUTHORIZED
+        )
+      );
+    }
+
+    const { accessToken, refreshToken } =
+      await generateAccessAndRefreshTokenToken(user);
+
+    // removing password & refreshToken fields
+    user.password = "";
+    user.refreshToken = "";
+
+    res
+      .status(StatusCodes.OK)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json(
+        new APIResponse(StatusCodes.OK, `Welcome back ${user.fullname}!`, {
+          user,
+          accessToken,
+          refreshToken,
         })
       );
   }
