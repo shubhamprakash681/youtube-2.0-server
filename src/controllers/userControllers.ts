@@ -9,7 +9,6 @@ import ErrorHandler from "../utils/ErrorHandler";
 import UserModel, { IUser } from "../models/userModel";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import APIResponse from "../utils/APIResponse";
-import { Document } from "mongoose";
 
 interface IRegisterUserBody {
   username: string;

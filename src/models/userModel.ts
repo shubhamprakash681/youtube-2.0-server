@@ -1,7 +1,6 @@
 import { Model, model, Schema, Document } from "mongoose";
 import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
-import { NextFunction } from "express";
 
 export interface IUser extends Document {
   username: string;
