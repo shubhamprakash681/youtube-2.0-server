@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import { StatusCodes } from "http-status-codes";
-import { registerUserSchemaValidator } from "../schema/registerUserSchema";
+import { registerUserSchemaValidator } from "../schema/user";
 import ErrorHandler from "../utils/ErrorHandler";
 import UserModel from "../models/userModel";
 import { uploadOnCloudinary } from "../utils/cloudinary";
@@ -129,12 +129,16 @@ export const registerUser = asyncHandler(
       );
     }
 
-    return res
-      .status(StatusCodes.CREATED)
-      .json(
-        new APIResponse(StatusCodes.CREATED, "User Registered Successfully!", {
-          user: userData,
-        })
-      );
+    return res.status(StatusCodes.CREATED).json(
+      new APIResponse(StatusCodes.CREATED, "User Registered Successfully!", {
+        user: userData,
+      })
+    );
+  }
+);
+
+export const loginUser = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { email, password } = req.body;
   }
 );
