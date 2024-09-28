@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { NextFunction } from "express";
 
-interface IUser extends Document {
+export interface IUser extends Document {
   username: string;
   email: string;
   fullname: string;
@@ -12,6 +12,10 @@ interface IUser extends Document {
   watchHistory: Schema.Types.ObjectId;
   password: string;
   refreshToken: string;
+
+  comparePassword: (enteredPassword: string) => Promise<boolean>;
+  generateAccessToken: () => string;
+  generateRefreshToken: () => string;
 }
 
 const userSchema: Schema<IUser> = new Schema(

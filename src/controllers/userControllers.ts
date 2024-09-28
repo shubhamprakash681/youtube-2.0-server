@@ -1,11 +1,15 @@
-import { NextFunction, Request, Response } from "express";
+import { CookieOptions, NextFunction, Request, Response } from "express";
 import asyncHandler from "../utils/asyncHandler";
 import { StatusCodes } from "http-status-codes";
-import { registerUserSchemaValidator } from "../schema/user";
+import {
+  loginSchemaValidator,
+  registerUserSchemaValidator,
+} from "../schema/user";
 import ErrorHandler from "../utils/ErrorHandler";
-import UserModel from "../models/userModel";
+import UserModel, { IUser } from "../models/userModel";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import APIResponse from "../utils/APIResponse";
+import { Document } from "mongoose";
 
 interface IRegisterUserBody {
   username: string;
@@ -13,6 +17,35 @@ interface IRegisterUserBody {
   fullname: string;
   password: string;
 }
+
+interface ILoginUserBody {
+  identifier: string;
+  password: string;
+}
+
+const cookieOptions: CookieOptions = {
+  httpOnly: true,
+  secure: true,
+};
+
+const generateAccessAndRefreshTokenToken = async (
+  user: IUser
+): Promise<{ accessToken: string; refreshToken: string }> => {
+  try {
+    const refreshToken = user.generateRefreshToken();
+    const accessToken = user.generateAccessToken();
+
+    user.refreshToken = refreshToken;
+    await user.save({ validateBeforeSave: false });
+
+    return { accessToken, refreshToken };
+  } catch (err: any) {
+    throw new ErrorHandler(
+      "Failed to generate Login Session! Please try after sometime.",
+      StatusCodes.INTERNAL_SERVER_ERROR
+    );
+  }
+};
 
 export const registerUser = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -139,6 +172,86 @@ export const registerUser = asyncHandler(
 
 export const loginUser = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { email, password } = req.body;
+    const { identifier, password } = req.body as ILoginUserBody;
+
+    // schema validation
+    const validationResponse = loginSchemaValidator.safeParse({
+      identifier,
+      password,
+    });
+
+    if (!validationResponse.success) {
+      const validationErrors = validationResponse.error.errors.map(
+        (err) => err.message
+      );
+
+      return next(
+        new ErrorHandler(
+          validationErrors.length
+            ? validationErrors.join(", ")
+            : "Invalid query parameters",
+          StatusCodes.BAD_REQUEST
+        )
+      );
+    }
+
+    const user = await UserModel.findOne({
+      $or: [{ email: identifier }, { username: identifier }],
+    });
+
+    if (!user) {
+      return next(
+        new ErrorHandler("Account not exists!", StatusCodes.NOT_FOUND)
+      );
+    }
+
+    const isPasswordMatched = await user.comparePassword(password);
+    if (!isPasswordMatched) {
+      return next(
+        new ErrorHandler(
+          "Login Identifier or Password is incorrect",
+          StatusCodes.UNAUTHORIZED
+        )
+      );
+    }
+
+    const { accessToken, refreshToken } =
+      await generateAccessAndRefreshTokenToken(user);
+
+    // removing password field
+    user.password = "";
+    user.refreshToken = "";
+
+    res
+      .status(StatusCodes.OK)
+      .cookie("accessToken", accessToken, cookieOptions)
+      .cookie("refreshToken", refreshToken, cookieOptions)
+      .json(
+        new APIResponse(StatusCodes.OK, `Welcome back ${user.fullname}!`, {
+          user,
+        })
+      );
+  }
+);
+
+export const logoutUser = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          refreshToken: "",
+        },
+      },
+      {
+        new: true,
+      }
+    );
+
+    res
+      .status(StatusCodes.OK)
+      .clearCookie("accessToken", cookieOptions)
+      .clearCookie("refreshToken", cookieOptions)
+      .json(new APIResponse(StatusCodes.OK, "Logged out successfully"));
   }
 );

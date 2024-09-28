@@ -1,6 +1,11 @@
 import express from "express";
-import { registerUser } from "../controllers/userControllers";
+import {
+  loginUser,
+  logoutUser,
+  registerUser,
+} from "../controllers/userControllers";
 import { uploadFileInServer } from "../middlewares/multer";
+import { isAuthenticatedUser } from "../middlewares/authMiddleware";
 
 const userRouter = express.Router();
 
@@ -17,5 +22,9 @@ userRouter.route("/register").post(
   ]),
   registerUser
 );
+userRouter.route("/login").post(loginUser);
+
+// secured user routes
+userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 
 export default userRouter;
