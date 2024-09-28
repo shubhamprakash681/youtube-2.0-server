@@ -196,7 +196,7 @@ export const loginUser = asyncHandler(
 
     const user = await UserModel.findOne({
       $or: [{ email: identifier }, { username: identifier }],
-    });
+    }).select("+password");
 
     if (!user) {
       return next(
