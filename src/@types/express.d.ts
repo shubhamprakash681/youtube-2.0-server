@@ -7,3 +7,5 @@ declare global {
     }
   }
 }
+
+export {}; // Ensures the file is treated as a module
