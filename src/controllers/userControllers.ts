@@ -4,6 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import {
   loginSchemaValidator,
   registerUserSchemaValidator,
+  updatePasswordSchemaValidator,
 } from "../schema/user";
 import ErrorHandler from "../utils/ErrorHandler";
 import UserModel, { IUser } from "../models/userModel";
@@ -233,6 +234,60 @@ export const loginUser = asyncHandler(
           refreshToken,
         })
       );
+  }
+);
+
+export const updatePassword = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { oldPassword, newPassword } = req.body;
+
+    // validations
+    const validationRes = updatePasswordSchemaValidator.safeParse({
+      oldPassword,
+      newPassword,
+    });
+
+    if (!validationRes.success) {
+      const validationErrors = validationRes.error.errors.map(
+        (err) => err.message
+      );
+
+      return next(
+        new ErrorHandler(
+          validationErrors.length
+            ? validationErrors.join(", ")
+            : "Invalid update password parameters",
+          StatusCodes.BAD_REQUEST
+        )
+      );
+    }
+
+    // getting user data from db
+    const user = await UserModel.findById(req.user?._id).select("+password");
+
+    if (user) {
+      const isPasswordMatched = await user?.comparePassword(oldPassword);
+      if (!isPasswordMatched) {
+        return next(
+          new ErrorHandler("Old password is incorrect", StatusCodes.BAD_REQUEST)
+        );
+      }
+
+      user.password = newPassword;
+
+      await user.save({ validateBeforeSave: false });
+
+      return res
+        .status(StatusCodes.OK)
+        .json(new APIResponse(StatusCodes.OK, "Password updated successfully"));
+    }
+
+    return next(
+      new ErrorHandler(
+        "Something went wrong while updating Password",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
   }
 );
 

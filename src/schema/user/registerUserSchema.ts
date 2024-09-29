@@ -17,7 +17,11 @@ export const usernameValidation = z
 const emailValidation = z.string().email({ message: "Invalid email address" });
 const passwordValidation = z
   .string()
-  .min(6, { message: "Password must be of atleast 6 characters" });
+  .regex(/^(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*[a-zA-Z]).{8,}$/gm, {
+    message:
+      "Password must have at least 8 characters.\nMust contain at least 1 uppercase letter, 1 lowercase letter, and 1 number.\nCan contain special characters",
+  });
+
 const fullnameValidation = z
   .string()
   .min(3, { message: "Fullname must be of atleast 3 characters" });
