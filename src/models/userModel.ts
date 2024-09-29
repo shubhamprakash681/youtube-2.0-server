@@ -8,7 +8,7 @@ export interface IUser extends Document {
   fullname: string;
   avatar: string;
   coverImage: string;
-  watchHistory: Schema.Types.ObjectId;
+  watchHistory: Schema.Types.ObjectId[];
   password: string;
   refreshToken: string;
 
