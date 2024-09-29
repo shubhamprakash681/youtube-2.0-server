@@ -237,6 +237,18 @@ export const loginUser = asyncHandler(
   }
 );
 
+export const getUserProfile = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    res
+      .status(StatusCodes.OK)
+      .json(
+        new APIResponse(StatusCodes.OK, "Profile data sent successfully", {
+          user: req.user,
+        })
+      );
+  }
+);
+
 export const updatePassword = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const { oldPassword, newPassword } = req.body;

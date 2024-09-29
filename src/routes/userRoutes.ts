@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getUserProfile,
   loginUser,
   logoutUser,
   refreshSession,
@@ -28,6 +29,7 @@ userRouter.route("/login").post(loginUser);
 userRouter.route("/refresh-session").post(refreshSession);
 
 // secured user routes
+userRouter.route("/profile").get(isAuthenticatedUser, getUserProfile);
 userRouter.route("/password/update").post(isAuthenticatedUser, updatePassword);
 userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 
