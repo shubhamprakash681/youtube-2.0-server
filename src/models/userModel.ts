@@ -6,8 +6,14 @@ export interface IUser extends Document {
   username: string;
   email: string;
   fullname: string;
-  avatar: string;
-  coverImage: string;
+  avatar: {
+    public_id: string;
+    url: string;
+  };
+  coverImage: {
+    public_id: string;
+    url: string;
+  };
   watchHistory: Schema.Types.ObjectId[];
   password: string;
   refreshToken: string;
@@ -44,12 +50,25 @@ const userSchema: Schema<IUser> = new Schema(
     },
 
     avatar: {
-      type: String,
-      required: true,
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
 
     coverImage: {
-      type: String,
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
 
     watchHistory: [

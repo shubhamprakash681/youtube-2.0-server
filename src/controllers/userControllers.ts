@@ -5,6 +5,7 @@ import {
   loginSchemaValidator,
   registerUserSchemaValidator,
   updatePasswordSchemaValidator,
+  updateProfileValidator,
 } from "../schema/user";
 import ErrorHandler from "../utils/ErrorHandler";
 import UserModel, { IUser } from "../models/userModel";
@@ -143,8 +144,10 @@ export const registerUser = asyncHandler(
       email,
       fullname,
       password,
-      avatar: avatarCloudRes.url,
-      coverImage: coverImageRes ? coverImageRes.url : "",
+      avatar: { public_id: avatarCloudRes.public_id, url: avatarCloudRes.url },
+      coverImage: coverImageRes
+        ? { public_id: coverImageRes.public_id, url: coverImageRes.url }
+        : { public_id: "", url: "" },
     });
 
     // full proof method -- ensuring by making an extra DB call
@@ -256,7 +259,7 @@ export const updateProfile = asyncHandler(
       );
     }
 
-    const validationRes = updatePasswordSchemaValidator.safeParse({
+    const validationRes = updateProfileValidator.safeParse({
       email,
       fullname,
     });
