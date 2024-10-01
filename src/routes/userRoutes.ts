@@ -32,15 +32,15 @@ userRouter.route("/refresh-session").post(refreshSession);
 
 // secured user routes
 userRouter.route("/profile").get(isAuthenticatedUser, getUserProfile);
-userRouter.route("/profile/update").post(isAuthenticatedUser, updateProfile);
+userRouter.route("/profile/update").patch(isAuthenticatedUser, updateProfile);
 userRouter
   .route("/avatar/update")
-  .post(
+  .patch(
     uploadFileInServer.single("avatar"),
     isAuthenticatedUser,
     updateUserAvatar
   );
-userRouter.route("/password/update").post(isAuthenticatedUser, updatePassword);
+userRouter.route("/password/update").patch(isAuthenticatedUser, updatePassword);
 userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 
 export default userRouter;
