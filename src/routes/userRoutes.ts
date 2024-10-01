@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  deleteCoverImage,
   getUserProfile,
   loginUser,
   logoutUser,
@@ -8,6 +9,7 @@ import {
   updatePassword,
   updateProfile,
   updateUserAvatar,
+  updateUserCoverImage,
 } from "../controllers/userControllers";
 import { uploadFileInServer } from "../middlewares/multer";
 import { isAuthenticatedUser } from "../middlewares/authMiddleware";
@@ -40,6 +42,16 @@ userRouter
     isAuthenticatedUser,
     updateUserAvatar
   );
+userRouter
+  .route("/cover-image/update")
+  .patch(
+    uploadFileInServer.single("coverImage"),
+    isAuthenticatedUser,
+    updateUserCoverImage
+  );
+userRouter
+  .route("/cover-image/delete")
+  .delete(isAuthenticatedUser, deleteCoverImage);
 userRouter.route("/password/update").patch(isAuthenticatedUser, updatePassword);
 userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 

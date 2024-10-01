@@ -337,6 +337,79 @@ export const updateUserAvatar = asyncHandler(
     );
   }
 );
+export const updateUserCoverImage = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const covImageLocalPath = req.file?.path;
+
+    if (!covImageLocalPath) {
+      return next(
+        new ErrorHandler(
+          "New Cover Image file is required",
+          StatusCodes.BAD_REQUEST
+        )
+      );
+    }
+
+    const covImageCloudRes = await uploadOnCloudinary(
+      covImageLocalPath,
+      `user/${req.user?.username}/coverImage`
+    );
+    if (!covImageCloudRes) {
+      return next(
+        new ErrorHandler(
+          "Cover Image update Failed! Please try again after some time",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        )
+      );
+    }
+
+    // delete old cloudinary image
+    await deleteCloudinaryFile(req.user?.coverImage.public_id);
+
+    const modifiedUser = await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          coverImage: {
+            public_id: covImageCloudRes.public_id,
+            url: covImageCloudRes.url,
+          },
+        },
+      },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    res.status(StatusCodes.OK).json(
+      new APIResponse(StatusCodes.OK, "Cover Image updated successfully!", {
+        user: modifiedUser,
+      })
+    );
+  }
+);
+export const deleteCoverImage = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    await deleteCloudinaryFile(req.user?.coverImage.public_id);
+
+    const modifiedUser = await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          coverImage: {
+            public_id: "",
+            url: "",
+          },
+        },
+      },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    res.status(StatusCodes.OK).json(
+      new APIResponse(StatusCodes.OK, "Cover Image deleted successfully!", {
+        user: modifiedUser,
+      })
+    );
+  }
+);
 
 export const updatePassword = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
