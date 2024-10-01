@@ -315,7 +315,8 @@ export const updateUserAvatar = asyncHandler(
     }
 
     // delete old cloudinary image
-    await deleteCloudinaryFile(req.user?.avatar.public_id);
+    req.user?.avatar.public_id &&
+      (await deleteCloudinaryFile(req.user?.avatar.public_id));
 
     const modifiedUser = await UserModel.findByIdAndUpdate(
       req.user?._id,
@@ -364,7 +365,8 @@ export const updateUserCoverImage = asyncHandler(
     }
 
     // delete old cloudinary image
-    await deleteCloudinaryFile(req.user?.coverImage.public_id);
+    req.user?.coverImage.public_id &&
+      (await deleteCloudinaryFile(req.user?.coverImage.public_id));
 
     const modifiedUser = await UserModel.findByIdAndUpdate(
       req.user?._id,
@@ -388,7 +390,8 @@ export const updateUserCoverImage = asyncHandler(
 );
 export const deleteCoverImage = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    await deleteCloudinaryFile(req.user?.coverImage.public_id);
+    req.user?.coverImage.public_id &&
+      (await deleteCloudinaryFile(req.user?.coverImage.public_id));
 
     const modifiedUser = await UserModel.findByIdAndUpdate(
       req.user?._id,
