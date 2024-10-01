@@ -34,24 +34,22 @@ userRouter.route("/refresh-session").post(refreshSession);
 
 // secured user routes
 userRouter.route("/profile").get(isAuthenticatedUser, getUserProfile);
-userRouter.route("/profile/update").patch(isAuthenticatedUser, updateProfile);
+userRouter.route("/profile").patch(isAuthenticatedUser, updateProfile);
 userRouter
-  .route("/avatar/update")
+  .route("/avatar")
   .patch(
     uploadFileInServer.single("avatar"),
     isAuthenticatedUser,
     updateUserAvatar
   );
 userRouter
-  .route("/cover-image/update")
+  .route("/cover-image")
   .patch(
     uploadFileInServer.single("coverImage"),
     isAuthenticatedUser,
     updateUserCoverImage
   );
-userRouter
-  .route("/cover-image/delete")
-  .delete(isAuthenticatedUser, deleteCoverImage);
+userRouter.route("/cover-image").delete(isAuthenticatedUser, deleteCoverImage);
 userRouter.route("/password/update").patch(isAuthenticatedUser, updatePassword);
 userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 
