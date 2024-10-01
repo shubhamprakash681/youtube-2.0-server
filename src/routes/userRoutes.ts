@@ -7,6 +7,7 @@ import {
   registerUser,
   updatePassword,
   updateProfile,
+  updateUserAvatar,
 } from "../controllers/userControllers";
 import { uploadFileInServer } from "../middlewares/multer";
 import { isAuthenticatedUser } from "../middlewares/authMiddleware";
@@ -32,6 +33,13 @@ userRouter.route("/refresh-session").post(refreshSession);
 // secured user routes
 userRouter.route("/profile").get(isAuthenticatedUser, getUserProfile);
 userRouter.route("/profile/update").post(isAuthenticatedUser, updateProfile);
+userRouter
+  .route("/avatar/update")
+  .post(
+    uploadFileInServer.single("avatar"),
+    isAuthenticatedUser,
+    updateUserAvatar
+  );
 userRouter.route("/password/update").post(isAuthenticatedUser, updatePassword);
 userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 

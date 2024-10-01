@@ -291,6 +291,52 @@ export const updateProfile = asyncHandler(
     );
   }
 );
+export const updateUserAvatar = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const avatarLocalPath = req.file?.path;
+
+    if (!avatarLocalPath) {
+      return next(
+        new ErrorHandler("New Avatar file is required", StatusCodes.BAD_REQUEST)
+      );
+    }
+
+    const avatarCloudResponse = await uploadOnCloudinary(
+      avatarLocalPath,
+      `user/${req.user?.username}/avatar`
+    );
+    if (!avatarCloudResponse) {
+      return next(
+        new ErrorHandler(
+          "User Avatar update failed! Please try after some time.",
+          StatusCodes.INTERNAL_SERVER_ERROR
+        )
+      );
+    }
+
+    // delete old cloudinary image
+    await deleteCloudinaryFile(req.user?.avatar.public_id);
+
+    const modifiedUser = await UserModel.findByIdAndUpdate(
+      req.user?._id,
+      {
+        $set: {
+          avatar: {
+            public_id: avatarCloudResponse.public_id,
+            url: avatarCloudResponse.url,
+          },
+        },
+      },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    res.status(StatusCodes.OK).json(
+      new APIResponse(StatusCodes.OK, "User Avatar updated successfully!", {
+        user: modifiedUser,
+      })
+    );
+  }
+);
 
 export const updatePassword = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
