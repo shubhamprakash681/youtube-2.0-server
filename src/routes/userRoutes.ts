@@ -6,6 +6,7 @@ import {
   refreshSession,
   registerUser,
   updatePassword,
+  updateProfile,
 } from "../controllers/userControllers";
 import { uploadFileInServer } from "../middlewares/multer";
 import { isAuthenticatedUser } from "../middlewares/authMiddleware";
@@ -30,6 +31,7 @@ userRouter.route("/refresh-session").post(refreshSession);
 
 // secured user routes
 userRouter.route("/profile").get(isAuthenticatedUser, getUserProfile);
+userRouter.route("/profile/update").post(isAuthenticatedUser, updateProfile);
 userRouter.route("/password/update").post(isAuthenticatedUser, updatePassword);
 userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 

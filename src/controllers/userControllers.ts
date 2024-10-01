@@ -8,7 +8,7 @@ import {
 } from "../schema/user";
 import ErrorHandler from "../utils/ErrorHandler";
 import UserModel, { IUser } from "../models/userModel";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { deleteCloudinaryFile, uploadOnCloudinary } from "../utils/cloudinary";
 import APIResponse from "../utils/APIResponse";
 import jwt from "jsonwebtoken";
 
@@ -239,13 +239,53 @@ export const loginUser = asyncHandler(
 
 export const getUserProfile = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    res
-      .status(StatusCodes.OK)
-      .json(
-        new APIResponse(StatusCodes.OK, "Profile data sent successfully", {
-          user: req.user,
-        })
+    res.status(StatusCodes.OK).json(
+      new APIResponse(StatusCodes.OK, "Profile data sent successfully", {
+        user: req.user,
+      })
+    );
+  }
+);
+export const updateProfile = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { fullname, email } = req.body as { fullname: string; email: string };
+
+    if (!email || !fullname) {
+      return next(
+        new ErrorHandler("All fields are required!", StatusCodes.BAD_REQUEST)
       );
+    }
+
+    const validationRes = updatePasswordSchemaValidator.safeParse({
+      email,
+      fullname,
+    });
+
+    if (!validationRes.success) {
+      const validationErrors = validationRes.error.errors.map(
+        (err) => err.message
+      );
+      return next(
+        new ErrorHandler(
+          validationErrors.length
+            ? validationErrors.join(", ")
+            : "Invalid parameters",
+          StatusCodes.BAD_REQUEST
+        )
+      );
+    }
+
+    const updatedUser = await UserModel.findByIdAndUpdate(
+      req.user._id,
+      { $set: { email, fullname } },
+      { new: true }
+    ).select("-password -refreshToken");
+
+    res.status(StatusCodes.OK).json(
+      new APIResponse(StatusCodes.OK, "Profile updated successfully!", {
+        user: updatedUser,
+      })
+    );
   }
 );
 
