@@ -1,7 +1,9 @@
 import express from "express";
 import {
   deleteCoverImage,
+  getUserChannelProfile,
   getUserProfile,
+  getWatchHistory,
   loginUser,
   logoutUser,
   refreshSession,
@@ -38,18 +40,22 @@ userRouter.route("/profile").patch(isAuthenticatedUser, updateProfile);
 userRouter
   .route("/avatar")
   .patch(
-    uploadFileInServer.single("avatar"),
     isAuthenticatedUser,
+    uploadFileInServer.single("avatar"),
     updateUserAvatar
   );
 userRouter
   .route("/cover-image")
   .patch(
-    uploadFileInServer.single("coverImage"),
     isAuthenticatedUser,
+    uploadFileInServer.single("coverImage"),
     updateUserCoverImage
   );
 userRouter.route("/cover-image").delete(isAuthenticatedUser, deleteCoverImage);
+userRouter
+  .route("/channel/:username")
+  .get(isAuthenticatedUser, getUserChannelProfile);
+userRouter.route("/watch-history").get(isAuthenticatedUser, getWatchHistory);
 userRouter.route("/password/update").patch(isAuthenticatedUser, updatePassword);
 userRouter.route("/logout").get(isAuthenticatedUser, logoutUser);
 

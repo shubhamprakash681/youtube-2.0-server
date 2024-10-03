@@ -12,6 +12,7 @@ import UserModel, { IUser } from "../models/userModel";
 import { deleteCloudinaryFile, uploadOnCloudinary } from "../utils/cloudinary";
 import APIResponse from "../utils/APIResponse";
 import jwt from "jsonwebtoken";
+import { ObjectId } from "mongodb";
 
 interface IRegisterUserBody {
   username: string;
@@ -545,5 +546,162 @@ export const logoutUser = asyncHandler(
       .clearCookie("accessToken", cookieOptions)
       .clearCookie("refreshToken", cookieOptions)
       .json(new APIResponse(StatusCodes.OK, "Logged out successfully"));
+  }
+);
+
+// Imp: Controllers with aggregation pipelines
+export const getUserChannelProfile = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { username } = req.params;
+
+    if (!username.trim()) {
+      return next(
+        new ErrorHandler("Username is required!", StatusCodes.BAD_REQUEST)
+      );
+    }
+
+    const channel = await UserModel.aggregate([
+      // 1st stage - to get all(here, only 1) users where username is req.params.username
+      {
+        $match: { username: username.toLocaleLowerCase() },
+      },
+
+      // lookup - looking for all subscriptions where channel = User[username: req.params.username]._id
+      {
+        $lookup: {
+          from: "subscriptions",
+          localField: "_id",
+          foreignField: "channel",
+          as: "subscribers",
+        },
+      },
+
+      // lookup - looking for all subscriptions where subscriber = User[username: req.params.username]._id
+      {
+        $lookup: {
+          from: "subscriptions",
+          localField: "_id",
+          foreignField: "subscriber",
+          as: "subscribedTo",
+        },
+      },
+
+      // adding fields to the documents
+      {
+        $addFields: {
+          // storing count of users that are subscribed to current user's (User[username: req.params.username]) channel
+          subscriberCount: {
+            $size: "$subscribers",
+          },
+
+          // storing count of channels that current user (User[username: req.params.username]) has subscribed
+          subscribedToCount: {
+            $size: "$subscribedTo",
+          },
+
+          // variable to store logged in user is subscribed to this channel (where username = req.params.username)
+          isSubscribed: {
+            $cond: {
+              if: { $in: [req.user?._id, "$subscribers.subscriber"] },
+              then: true,
+              else: false,
+            },
+          },
+        },
+      },
+
+      // project - to specify which fields to keep in the merged document
+      {
+        $project: {
+          fullname: 1,
+          username: 1,
+          avatar: 1,
+          coverImage: 1,
+          email: 1,
+          subscriberCount: 1,
+          subscribedToCount: 1,
+          isSubscribed: 1,
+        },
+      },
+    ]);
+
+    if (!channel.length) {
+      return next(
+        new ErrorHandler("Channel does not exists", StatusCodes.NOT_FOUND)
+      );
+    }
+
+    return res.status(StatusCodes.OK).json(
+      new APIResponse(StatusCodes.OK, "Channel data fetched successfully", {
+        channelData: channel,
+      })
+    );
+  }
+);
+
+export const getWatchHistory = asyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    // Note: This conversion is required because we need to convert string IDs to mongodb id
+    // as aggregation pipeline does not automatically performs this this conversion
+    // unlike in case of mongoose (which automatically performs this kind of conversion)
+    const userId = new ObjectId(req.user?._id);
+
+    const user = await UserModel.aggregate([
+      // 1st stage - to find user
+      {
+        $match: {
+          _id: userId,
+        },
+      },
+
+      // lookup
+      {
+        $lookup: {
+          from: "videos",
+          localField: "watchHistory",
+          foreignField: "_id",
+          as: "watchHistory",
+          pipeline: [
+            {
+              $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner",
+
+                pipeline: [
+                  {
+                    $project: {
+                      fullname: 1,
+                      username: 1,
+                      avatar: 1,
+                    },
+                  },
+                ],
+              },
+            },
+
+            // pipeline to change wathcHistory's owner from array to object (since we have a single object in array)
+            {
+              $addFields: {
+                owner: {
+                  $first: "$owner",
+                },
+              },
+            },
+          ],
+        },
+      },
+    ]);
+
+    res.status(StatusCodes.OK).json(
+      new APIResponse(
+        StatusCodes.OK,
+        "Successfully fetched your Watch History",
+        {
+          watchHistory: user[0].watchHistory,
+        }
+      )
+    );
   }
 );
