@@ -1,9 +1,15 @@
 import { Document, Model, model, Schema } from "mongoose";
 import aggregatePaginate from "mongoose-aggregate-paginate-v2";
 
-interface IVideo extends Document {
-  videoFile: string;
-  thumbnail: string;
+export interface IVideo extends Document {
+  videoFile: {
+    public_id: string;
+    url: string;
+  };
+  thumbnail: {
+    public_id: string;
+    url: string;
+  };
   title: string;
   description: string;
   duration: number;
@@ -12,16 +18,28 @@ interface IVideo extends Document {
   owner: Schema.Types.ObjectId;
 }
 
-const videoSchema: Schema<IVideo> = new Schema(
+const videoSchema = new Schema<IVideo>(
   {
     videoFile: {
-      type: String,
-      required: true,
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
 
     thumbnail: {
-      type: String,
-      required: true,
+      public_id: {
+        type: String,
+        required: true,
+      },
+      url: {
+        type: String,
+        required: true,
+      },
     },
 
     title: {

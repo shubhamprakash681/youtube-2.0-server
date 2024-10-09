@@ -59,7 +59,7 @@ export const registerUser = asyncHandler(
     // validations
     if (
       [username, email, fullname, password].some(
-        (fields) => fields?.trim() === ""
+        (field) => typeof field !== "string" || field.trim() === ""
       )
     ) {
       return next(
