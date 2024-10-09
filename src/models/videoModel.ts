@@ -1,4 +1,4 @@
-import { Document, Model, model, Schema } from "mongoose";
+import { Document, model, Schema } from "mongoose";
 import aggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 export interface IVideo extends Document {
@@ -76,6 +76,6 @@ const videoSchema = new Schema<IVideo>(
 
 videoSchema.plugin(aggregatePaginate);
 
-const VideoModel: Model<IVideo> = model("Video", videoSchema);
+const VideoModel = model<IVideo>("Video", videoSchema);
 
 export default VideoModel;

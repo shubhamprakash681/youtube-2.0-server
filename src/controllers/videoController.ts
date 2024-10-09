@@ -5,6 +5,7 @@ import ErrorHandler from "../utils/ErrorHandler";
 import { StatusCodes } from "http-status-codes";
 import { uploadOnCloudinary } from "../utils/cloudinary";
 import APIResponse from "../utils/APIResponse";
+import mongoose, { PipelineStage } from "mongoose";
 
 type getAllVideosQuery = {
   page: number;
@@ -16,7 +17,97 @@ type getAllVideosQuery = {
 };
 export const getAllVideos = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
-    const { page = 1, limit = 10, query, sortBy, sortType, userId } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      query,
+      sortBy,
+      sortType = "asc",
+      userId,
+    } = req.query as unknown as getAllVideosQuery;
+
+    const pipeline: PipelineStage[] = [];
+
+    if (query) {
+      pipeline.push({
+        $search: {
+          index: "video-search-index",
+          text: {
+            query,
+            path: ["title", "description"],
+          },
+        },
+      });
+    }
+
+    // send userId with req.query if want to get videos of specific user only
+    if (userId) {
+      pipeline.push({
+        $match: {
+          owner: new mongoose.Types.ObjectId(userId),
+        },
+      });
+    }
+
+    if (sortBy && sortType) {
+      pipeline.push({
+        $sort: {
+          [sortBy]: sortType === "des" ? -1 : 1,
+        },
+      });
+    } else {
+      // default sorting by creation date
+      pipeline.push({
+        $sort: {
+          createdAt: -1,
+        },
+      });
+    }
+
+    // pipeline for fetching public videos only
+    pipeline.push({
+      $match: { isPublic: true },
+    });
+
+    // lookup for populating owner data
+    pipeline.push(
+      {
+        $lookup: {
+          from: "users",
+          localField: "owner",
+          foreignField: "_id",
+          as: "owner",
+          pipeline: [
+            {
+              $project: {
+                fullname: 1,
+                username: 1,
+                avatar: "$avatar.url",
+              },
+            },
+          ],
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$owner",
+        },
+      }
+    );
+
+    const videoAggregate = VideoModel.aggregate(pipeline);
+
+    const videos = await VideoModel.aggregatePaginate(videoAggregate, {
+      page,
+      limit,
+    });
+
+    res
+      .status(StatusCodes.OK)
+      .json(
+        new APIResponse(StatusCodes.OK, "Video fetched successfully", videos)
+      );
   }
 );
 

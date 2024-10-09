@@ -1,5 +1,5 @@
 import { isAuthenticatedUser } from "../middlewares/authMiddleware";
-import { uploadVideo } from "../controllers/videoController";
+import { getAllVideos, uploadVideo } from "../controllers/videoController";
 import express from "express";
 import { uploadFileInServer } from "../middlewares/multer";
 
@@ -19,5 +19,6 @@ videoRouter.route("/upload").post(
   ]),
   uploadVideo
 );
+videoRouter.route("/").get(getAllVideos);
 
 export default videoRouter;
