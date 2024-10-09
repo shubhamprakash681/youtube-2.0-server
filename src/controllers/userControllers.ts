@@ -280,7 +280,7 @@ export const updateProfile = asyncHandler(
     }
 
     const updatedUser = await UserModel.findByIdAndUpdate(
-      req.user._id,
+      req.user?._id,
       { $set: { email, fullname } },
       { new: true }
     ).select("-password -refreshToken");
@@ -644,7 +644,7 @@ export const getWatchHistory = asyncHandler(
     // Note: This conversion is required because we need to convert string IDs to mongodb id
     // as aggregation pipeline does not automatically performs this this conversion
     // unlike in case of mongoose (which automatically performs this kind of conversion)
-    const userId = new ObjectId(req.user?._id);
+    const userId = new ObjectId(req.user?._id! as ObjectId);
 
     const user = await UserModel.aggregate([
       // 1st stage - to find user
