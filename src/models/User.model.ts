@@ -4,7 +4,7 @@ import bcrypt from "bcrypt";
 import aggregatePaginate from "mongoose-aggregate-paginate-v2";
 import { model } from "mongoose";
 
-interface IUser extends Document {
+export interface IUser extends Document {
   username: string;
   email: string;
   fullname: string;
