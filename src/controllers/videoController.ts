@@ -15,6 +15,8 @@ type getAllVideosQuery = {
   sortType: "asc" | "des";
   userId: string;
 };
+
+// TODO: pipeline not running if query is there
 export const getAllVideos = asyncHandler(
   async (req: Request, res: Response, next: NextFunction) => {
     const {
@@ -35,10 +37,20 @@ export const getAllVideos = asyncHandler(
           text: {
             query,
             path: ["title", "description"],
+            fuzzy: {
+              maxEdits: 2,
+              prefixLength: 0,
+              maxExpansions: 50,
+            },
           },
         },
       });
     }
+
+    // pipeline for fetching public videos only
+    pipeline.push({
+      $match: { isPublic: true },
+    });
 
     // send userId with req.query if want to get videos of specific user only
     if (userId) {
@@ -63,11 +75,6 @@ export const getAllVideos = asyncHandler(
         },
       });
     }
-
-    // pipeline for fetching public videos only
-    pipeline.push({
-      $match: { isPublic: true },
-    });
 
     // lookup for populating owner data
     pipeline.push(
@@ -95,6 +102,8 @@ export const getAllVideos = asyncHandler(
         },
       }
     );
+
+    // console.log(pipeline);
 
     const videoAggregate = VideoModel.aggregate(pipeline);
 
