@@ -24,13 +24,19 @@ app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 app.use(express.static("public"));
 
 // routes import
-import { healthcheckRouter, userRouter, videoRouter } from "./routes";
+import {
+  commentRouter,
+  healthcheckRouter,
+  userRouter,
+  videoRouter,
+} from "./routes";
 import { errorMiddleware } from "./middlewares/error";
 
 // routes use
 app.use("/api/v1/", healthcheckRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/video", videoRouter);
+app.use("/api/v1/comment", commentRouter);
 
 // handling unknown routes
 app.all("*", (req, res, next) => {
