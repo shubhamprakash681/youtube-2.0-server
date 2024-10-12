@@ -1,4 +1,4 @@
-import { model, Schema } from "mongoose";
+import { Document, Model, model, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 interface IComment extends Document {
@@ -7,7 +7,7 @@ interface IComment extends Document {
   owner: Schema.Types.ObjectId;
 }
 
-interface ICommentModel {
+interface ICommentModel extends Model<IComment> {
   aggregatePaginate: Function;
 }
 
@@ -35,8 +35,8 @@ const CommentSchema: Schema<IComment> = new Schema(
 
 CommentSchema.plugin(mongooseAggregatePaginate);
 
-const CommentModel: ICommentModel = model<IComment, ICommentModel>(
+const Comment: ICommentModel = model<IComment, ICommentModel>(
   "Comment",
   CommentSchema
 );
-export default CommentModel;
+export default Comment;

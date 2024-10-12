@@ -1,4 +1,4 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, Model, model, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 interface ITweet extends Document {
@@ -6,7 +6,7 @@ interface ITweet extends Document {
   owner: Schema.Types.ObjectId;
 }
 
-interface ITweeModel {
+interface ITweeModel extends Model<ITweet> {
   aggregatePaginate: Function;
 }
 

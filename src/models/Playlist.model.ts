@@ -1,4 +1,4 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, Model, model, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 interface IPlaylist extends Document {
@@ -8,7 +8,7 @@ interface IPlaylist extends Document {
   owner: Schema.Types.ObjectId;
 }
 
-interface IPlaylistModel {
+interface IPlaylistModel extends Model<IPlaylist> {
   aggregatePaginate: Function;
 }
 

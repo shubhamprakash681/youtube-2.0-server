@@ -1,4 +1,4 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, Model, model, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 interface ISubscription extends Document {
@@ -6,7 +6,7 @@ interface ISubscription extends Document {
   channel: Schema.Types.ObjectId;
 }
 
-interface ISubscriptionModel {
+interface ISubscriptionModel extends Model<ISubscription> {
   aggregatePaginate: Function;
 }
 

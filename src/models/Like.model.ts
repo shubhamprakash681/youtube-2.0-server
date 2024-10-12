@@ -1,4 +1,4 @@
-import { Document, model, Schema } from "mongoose";
+import { Document, Model, model, Schema } from "mongoose";
 import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 interface ILike extends Document {
@@ -8,7 +8,7 @@ interface ILike extends Document {
   likedBy: Schema.Types.ObjectId;
 }
 
-interface ILikeModel {
+interface ILikeModel extends Model<ILike> {
   aggregatePaginate: Function;
 }
 
