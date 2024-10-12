@@ -25,11 +25,12 @@ app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 app.use(express.static("public"));
 
 // routes imports
-import { healthcheckRouter, userRouter } from "./routes";
+import { healthcheckRouter, userRouter, videoRouter } from "./routes";
 
 // routes use
 app.use("/api/v1/", healthcheckRouter);
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/video", videoRouter);
 
 // handling unknown routes
 app.all("*", (req, res, next) => {
