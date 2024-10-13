@@ -28,8 +28,8 @@ const SubscriptionSchema: Schema<ISubscription> = new Schema(
 
 SubscriptionSchema.plugin(mongooseAggregatePaginate);
 
-const SubscriptionModel: ISubscriptionModel = model<
+const Subscription: ISubscriptionModel = model<
   ISubscription,
   ISubscriptionModel
 >("Subscription", SubscriptionSchema);
-export default SubscriptionModel;
+export default Subscription;
