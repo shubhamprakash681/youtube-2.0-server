@@ -39,6 +39,6 @@ const LikeSchema: Schema<ILike> = new Schema(
 
 LikeSchema.plugin(mongooseAggregatePaginate);
 
-const LikeModel: ILikeModel = model<ILike, ILikeModel>("Like", LikeSchema);
+const Like: ILikeModel = model<ILike, ILikeModel>("Like", LikeSchema);
 
-export default LikeModel;
+export default Like;
