@@ -4,6 +4,8 @@ import cors from "cors";
 import ErrorHandler from "./utils/ErrorHandler";
 import { StatusCodes } from "http-status-codes";
 import { errorMiddleware } from "./middlewares/Error.middleware";
+import swaggerUi from "swagger-ui-express";
+import swaggerDocument from "../swagger-output.json";
 
 const app = express();
 
@@ -23,6 +25,9 @@ app.use(express.urlencoded({ extended: true, limit: "50kb" }));
 
 // for serving static files
 app.use(express.static("public"));
+
+// Setting up Swagger UI
+app.use("/api/docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // routes imports
 import {
