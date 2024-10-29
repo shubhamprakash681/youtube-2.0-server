@@ -36,12 +36,14 @@ import {
   videoRouter,
   commentRouter,
   dashboardRouter,
+  likeRouter,
 } from "./routes";
 
 // routes use
 app.use("/api/v1/", healthcheckRouter);
 app.use("/api/v1/user", userRouter);
 app.use("/api/v1/dashboard", dashboardRouter);
+app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/video", videoRouter);
 app.use("/api/v1/comment", commentRouter);
 

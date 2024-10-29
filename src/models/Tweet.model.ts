@@ -27,5 +27,5 @@ const TweetSchema: Schema<ITweet> = new Schema(
 
 TweetSchema.plugin(mongooseAggregatePaginate);
 
-const TweetModel: ITweeModel = model<ITweet, ITweeModel>("Tweet", TweetSchema);
-export default TweetModel;
+const Tweet: ITweeModel = model<ITweet, ITweeModel>("Tweet", TweetSchema);
+export default Tweet;
