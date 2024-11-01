@@ -38,6 +38,7 @@ import {
   dashboardRouter,
   likeRouter,
   subscriptionRouter,
+  tweetRouter,
 } from "./routes";
 
 // routes use
@@ -48,6 +49,7 @@ app.use("/api/v1/like", likeRouter);
 app.use("/api/v1/subscription", subscriptionRouter);
 app.use("/api/v1/video", videoRouter);
 app.use("/api/v1/comment", commentRouter);
+app.use("/api/v1/tweet", tweetRouter);
 
 // handling unknown routes
 app.all("*", (req, res, next) => {
