@@ -1,5 +1,5 @@
 {
-  "name": "youtube-2.0-server",
+  "name": "videoshare-server",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
