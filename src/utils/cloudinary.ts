@@ -18,8 +18,8 @@ export const uploadOnCloudinary = async (
     const res = await cloudinary.uploader.upload(localFilePath, {
       resource_type: "auto",
       folder: cloudinaryFolderName
-        ? `youtube-2.0/${cloudinaryFolderName}`
-        : "youtube-2.0",
+        ? `videoshare/${cloudinaryFolderName}`
+        : "videoshare",
     });
 
     // if file uploaded successfully
