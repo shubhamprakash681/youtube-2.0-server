@@ -95,7 +95,7 @@ export const getChannelVideos = AsyncHandler(
         },
       },
 
-      // stage 2 - lookup to populate video likes
+      // stage 2 & 3 - get total likes on each video
       {
         $lookup: {
           from: "likes",
@@ -104,8 +104,6 @@ export const getChannelVideos = AsyncHandler(
           as: "likes",
         },
       },
-
-      // stage 3 - get total likes on each video
       {
         $addFields: {
           likeCount: {
@@ -114,7 +112,32 @@ export const getChannelVideos = AsyncHandler(
         },
       },
 
-      // stage 4 - sort by createdAt in desc order
+      // stage 4 & 5 - get total comments on each video
+      {
+        $lookup: {
+          from: "comments",
+          localField: "_id",
+          foreignField: "video",
+          as: "comments",
+        },
+      },
+      {
+        $addFields: {
+          commentCount: {
+            $size: "$comments",
+          },
+        },
+      },
+
+      // stage 6 - exclusive projection for removing extra fields
+      {
+        $project: {
+          likes: 0,
+          comments: 0,
+        },
+      },
+
+      // stage 7 - sort by createdAt in desc order
       {
         $sort: {
           createdAt: -1,
@@ -133,7 +156,7 @@ export const getChannelVideos = AsyncHandler(
         new APIResponse(
           StatusCodes.OK,
           "All videos uploaded by your channel fetched successfully",
-          { videos }
+          { ...videos }
         )
       );
   }
