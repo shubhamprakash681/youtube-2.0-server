@@ -5,6 +5,8 @@ import { ObjectId } from "mongodb";
 import Subscription from "../models/Subscription.model";
 import { StatusCodes } from "http-status-codes";
 import APIResponse from "../utils/APIResponse";
+import ErrorHandler from "../utils/ErrorHandler";
+import { deleteCloudinaryFile } from "../utils/cloudinary";
 
 // Get the personal channel stats like total video views, total subscribers, total videos, total likes etc.
 export const getChannelStats = AsyncHandler(
@@ -159,5 +161,78 @@ export const getChannelVideos = AsyncHandler(
           { ...videos }
         )
       );
+  }
+);
+
+export const toggleVideoState = AsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { videoId } = req.params as { videoId: string };
+
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      return next(new ErrorHandler("Video not found!", StatusCodes.NOT_FOUND));
+    }
+
+    if (video.owner.toString() !== req.user?._id!.toString()) {
+      return next(
+        new ErrorHandler("You cannot edit this video", StatusCodes.UNAUTHORIZED)
+      );
+    }
+
+    video.isPublic = !video.isPublic;
+    await video.save();
+
+    res
+      .status(StatusCodes.OK)
+      .json(
+        new APIResponse(
+          StatusCodes.OK,
+          video.isPublic ? "Video made Public" : "Video made Private"
+        )
+      );
+  }
+);
+
+export const deleteVideo = AsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { videoId } = req.params as { videoId: string };
+
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      return next(new ErrorHandler("Video not found!", StatusCodes.NOT_FOUND));
+    }
+
+    if (video.owner.toString() !== req.user?._id!.toString()) {
+      return next(
+        new ErrorHandler(
+          "You cannot delete this video",
+          StatusCodes.UNAUTHORIZED
+        )
+      );
+    }
+
+    const videoFileDeleteSuccess = await deleteCloudinaryFile(
+      video.videoFile.public_id,
+      "video"
+    );
+
+    if (videoFileDeleteSuccess) {
+      await deleteCloudinaryFile(video.thumbnail.public_id);
+
+      await Video.findByIdAndDelete(video._id);
+
+      return res
+        .status(StatusCodes.OK)
+        .json(new APIResponse(StatusCodes.OK, "Video deleted successfully"));
+    }
+
+    return next(
+      new ErrorHandler(
+        "Video delete failed! Please try again",
+        StatusCodes.INTERNAL_SERVER_ERROR
+      )
+    );
   }
 );

@@ -1,5 +1,9 @@
 import express from "express";
-import { getAllVideos, uploadVideo } from "../controllers/video.controller";
+import {
+  getAllVideos,
+  updateVideo,
+  uploadVideo,
+} from "../controllers/video.controller";
 import { isAuthenticatedUser } from "../middlewares/Auth.middleware";
 import { uploadFileInServer } from "../middlewares/Multer.middleware";
 
@@ -21,5 +25,13 @@ videoRouter.route("/upload").post(
   ]),
   uploadVideo
 );
+
+videoRouter
+  .route("/update/:videoId")
+  .patch(
+    isAuthenticatedUser,
+    uploadFileInServer.single("thumbnail"),
+    updateVideo
+  );
 
 export default videoRouter;

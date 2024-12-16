@@ -5,7 +5,7 @@ import mongoose, { PipelineStage } from "mongoose";
 import { StatusCodes } from "http-status-codes";
 import APIResponse from "../utils/APIResponse";
 import ErrorHandler from "../utils/ErrorHandler";
-import { uploadOnCloudinary } from "../utils/cloudinary";
+import { deleteCloudinaryFile, uploadOnCloudinary } from "../utils/cloudinary";
 
 type getAllVideosQuery = {
   page: number;
@@ -200,6 +200,89 @@ export const uploadVideo = AsyncHandler(
     res.status(StatusCodes.CREATED).json(
       new APIResponse(StatusCodes.CREATED, "Video uploaded successfully", {
         video: videoData,
+      })
+    );
+  }
+);
+
+export const updateVideo = AsyncHandler(
+  async (req: Request, res: Response, next: NextFunction) => {
+    const { videoId } = req.params as { videoId: string };
+
+    const { title, description } = req.body as {
+      title: string;
+      description: string;
+    };
+
+    if (
+      [title, description].some(
+        (field) => typeof field !== "string" || field.trim() === ""
+      )
+    ) {
+      return next(
+        new ErrorHandler("All fields are required!", StatusCodes.BAD_REQUEST)
+      );
+    }
+
+    const video = await Video.findById(videoId);
+
+    if (!video) {
+      return next(new ErrorHandler("Video not found!", StatusCodes.NOT_FOUND));
+    }
+
+    if (video.owner.toString() !== req.user?._id!.toString()) {
+      return next(
+        new ErrorHandler(
+          "You cannot update this video",
+          StatusCodes.UNAUTHORIZED
+        )
+      );
+    }
+
+    const thumbnailLocalPath = req.file?.path;
+    if (!thumbnailLocalPath) {
+      return next(
+        new ErrorHandler("Thumbnail file is required", StatusCodes.BAD_REQUEST)
+      );
+    }
+
+    const thumbnailCloudRes = await uploadOnCloudinary(
+      thumbnailLocalPath,
+      `thumbnail/${req.user?.username}`
+    );
+    if (!thumbnailCloudRes) {
+      return next(
+        new ErrorHandler("Video update failed! Please try again after sometime")
+      );
+    }
+
+    const oldThumbnailDeleteSuccess = await deleteCloudinaryFile(
+      video.thumbnail.public_id
+    );
+    if (!oldThumbnailDeleteSuccess) {
+      return next(
+        new ErrorHandler("Video update failed! Please try again after sometime")
+      );
+    }
+
+    const modifiedVideo = await Video.findByIdAndUpdate(
+      video._id,
+      {
+        $set: {
+          thumbnail: {
+            public_id: thumbnailCloudRes.public_id,
+            url: thumbnailCloudRes.url,
+          },
+          title,
+          description,
+        },
+      },
+      { new: true }
+    );
+
+    res.status(StatusCodes.OK).json(
+      new APIResponse(StatusCodes.OK, "Video updated successfully", {
+        video: modifiedVideo,
       })
     );
   }

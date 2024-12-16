@@ -37,7 +37,8 @@ export const uploadOnCloudinary = async (
 };
 
 export const deleteCloudinaryFile = async (
-  publicId: string
+  publicId: string,
+  resource_type?: "image" | "video"
 ): Promise<boolean> => {
   cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
@@ -46,7 +47,9 @@ export const deleteCloudinaryFile = async (
   });
 
   try {
-    await cloudinary.uploader.destroy(publicId);
+    await cloudinary.uploader.destroy(publicId, {
+      resource_type: resource_type ?? "image",
+    });
     console.log("File deleted successfully");
 
     return true;
